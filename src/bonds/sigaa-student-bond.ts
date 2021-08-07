@@ -47,7 +47,7 @@ export class SigaaStudentBond implements StudentBond {
 
   /**
    * Get courses, in IFSC it is called "Turmas Virtuais".
-   * @param allPeriods if true, all courses will be returned; otherwise, only current courses.
+   * @param allPeriods if true, all courses will be returned; otherwise, only latest courses.
    * @returns Promise with array of courses.
    */
   async getCourses(allPeriods = false): Promise<CourseStudent[]> {
@@ -58,47 +58,135 @@ export class SigaaStudentBond implements StudentBond {
     const table = coursesPage.$('.listagem');
     if (table.length === 0) return [];
     const listCourses: CourseStudent[] = [];
-    let period;
-    let rows = table.find('tbody > tr').toArray();
+    const rows = table.find('tbody > tr').toArray();
+
+    /* 
+       If allPeriods is true then only the last period is
+       returned, therefore we need to find out what the 
+       value of the last period is, since different 
+       versions of SIGAA can have different ordering we 
+       can't get the last or first period in the table,
+       we need to find out which is the newest regardless
+       of table order.
+    */
+    let periodFilter: null | string = null;
     if (!allPeriods) {
-      let lastPeriodIndex;
       for (let i = 0; i < rows.length; i++) {
         const cellElements = coursesPage.$(rows[i]).find('td');
         if (cellElements.eq(0).hasClass('periodo')) {
-          lastPeriodIndex = i;
+          const currentPeriod = this.parser.removeTagsHtml(
+            cellElements.eq(0).html()
+          );
+          if (periodFilter == null) {
+            periodFilter = currentPeriod;
+          } else if ([currentPeriod, periodFilter].sort()[1] == currentPeriod) {
+            //Check alphabetically if the currentPeriod is the oldest
+            periodFilter = currentPeriod;
+          } else {
+            //If the periodFilter is already the newest, we don't need to look for a newest one.
+            break;
+          }
         }
       }
-      rows = rows.slice(lastPeriodIndex);
     }
+
+    const tableColumnIndexs: Record<string, null | number> = {
+      title: null,
+      class: null,
+      schedule: null,
+      numberOfStudents: null,
+      button: null
+    };
+
+    const tableHeaderCellElements = table.find('thead > tr td').toArray();
+    for (let column = 0; column < tableHeaderCellElements.length; column++) {
+      const cellContent = this.parser.removeTagsHtml(
+        coursesPage.$(tableHeaderCellElements[column]).html()
+      );
+      switch (cellContent) {
+        case 'Disciplina':
+          tableColumnIndexs.title = column;
+          break;
+        case 'Turma':
+          tableColumnIndexs.class = column;
+          break;
+        case 'Horário':
+          tableColumnIndexs.schedule = column;
+          break;
+        case 'Alunos':
+          tableColumnIndexs.numberOfStudents = column;
+          break;
+        case '':
+          tableColumnIndexs.button = column;
+          break;
+      }
+    }
+
+    if (tableColumnIndexs.button == null) {
+      throw new Error(
+        'SIGAA: Invalid courses table, could not find the column with class buttons.'
+      );
+    }
+    if (tableColumnIndexs.title == null) {
+      throw new Error(
+        'SIGAA: Invalid courses table, could not find the column with class titles.'
+      );
+    }
+    if (tableColumnIndexs.schedule == null) {
+      throw new Error(
+        'SIGAA: Invalid courses table, could not find the column with class schedules.'
+      );
+    }
+    let period;
+
     for (const row of rows) {
       const cellElements = coursesPage.$(row).find('td');
       if (cellElements.eq(0).hasClass('periodo')) {
         period = this.parser.removeTagsHtml(cellElements.html());
-      } else if (period) {
-        const buttonCoursePage = cellElements.eq(5).find('a[onclick]');
-        if (buttonCoursePage) {
-          const fullname = this.parser.removeTagsHtml(
-            cellElements.eq(0).html()
+      } else if (period && (!periodFilter || periodFilter == period)) {
+        const fullname = this.parser.removeTagsHtml(
+          cellElements.eq(tableColumnIndexs.title).html()
+        );
+
+        const [title, code] = fullname.split(' - ');
+
+        const buttonCoursePage = cellElements
+          .eq(tableColumnIndexs.button)
+          .find('a[onclick]');
+
+        const buttonOnClickCode = buttonCoursePage.attr('onclick');
+
+        if (!buttonOnClickCode)
+          throw new Error('SIGAA: Courses table without course button.');
+
+        const form = coursesPage.parseJSFCLJS(buttonOnClickCode);
+
+        let numberOfStudents = 0;
+        if (tableColumnIndexs.numberOfStudents !== null) {
+          numberOfStudents = Number(
+            this.parser.removeTagsHtml(
+              cellElements.eq(tableColumnIndexs.numberOfStudents).html()
+            )
           );
-          const buttonCoursePage = cellElements.eq(5).find('a[onclick]');
-          const buttonOnClickCode = buttonCoursePage.attr('onclick');
-
-          if (!buttonOnClickCode) throw new Error('SIGAA: Invalid row.');
-          const form = coursesPage.parseJSFCLJS(buttonOnClickCode);
-
-          const courseData: CourseStudentData = {
-            title: fullname.slice(fullname.indexOf(' - ') + 3),
-            code: fullname.slice(0, fullname.indexOf(' - ')),
-            numberOfStudents: parseInt(
-              this.parser.removeTagsHtml(cellElements.eq(2).html())
-            ),
-            schedule: this.parser.removeTagsHtml(cellElements.eq(4).html()),
-            period,
-            id: form.postValues['idTurma'],
-            form
-          };
-          listCourses.push(this.courseFactory.createCourseStudent(courseData));
         }
+
+        const schedule = this.parser.removeTagsHtml(
+          cellElements.eq(tableColumnIndexs.schedule).html()
+        );
+
+        const id = form.postValues['idTurma'];
+
+        if (!id) throw new Error('SIGAA: Course ID not found.');
+        const courseData: CourseStudentData = {
+          title,
+          code,
+          schedule,
+          numberOfStudents,
+          period,
+          id,
+          form
+        };
+        listCourses.push(this.courseFactory.createCourseStudent(courseData));
       }
     }
     return listCourses;
