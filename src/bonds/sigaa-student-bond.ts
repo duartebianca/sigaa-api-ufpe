@@ -34,6 +34,7 @@ export interface StudentBond {
  * @category Internal
  */
 export class SigaaStudentBond implements StudentBond {
+
   constructor(
     private http: HTTP,
     private parser: Parser,
@@ -41,7 +42,7 @@ export class SigaaStudentBond implements StudentBond {
     readonly program: string,
     readonly registration: string,
     readonly bondSwitchUrl: URL | null
-  ) {}
+  ) { }
 
   readonly type = 'student';
 
@@ -190,5 +191,41 @@ export class SigaaStudentBond implements StudentBond {
       }
     }
     return listCourses;
+  }
+
+  async getFrontPageHomeworks() {
+    const frontPage = await this.http.get('https://sig.ifsc.edu.br/sigaa/verPortalDiscente.do');
+    const table = frontPage.$('#avaliacao-portal > table');
+    if (table.length === 0) return [];
+    const listCourses: CourseStudent[] = [];
+    const rows = table.find('tbody > tr').toArray();
+    const tableColumnIndexs: Record<string, null | number> = {
+      date: null,
+      homework: null,
+      status: null
+    };
+
+    const tableHeaderCellElements = table.find('thead > tr td').toArray();
+    for (let column = 0; column < tableHeaderCellElements.length; column++) {
+      const cellContent = this.parser.removeTagsHtml(
+        coursesPage.$(tableHeaderCellElements[column]).html()
+      );
+      console.log(cellContent)
+      switch (cellContent) {
+        case 'Data':
+          tableColumnIndexs.date = column
+          break;
+        case 'Atividade':
+          tableColumnIndexs.homework = column;
+          break;
+        case '':
+          tableColumnIndexs.status = column;
+          break;
+      }
+    }
+    for (const row of rows) {
+      const cellElements = frontPage.$(row).find('td');
+      console.log(row);
+    }
   }
 }
