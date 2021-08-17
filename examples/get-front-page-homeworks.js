@@ -1,4 +1,4 @@
-const { Sigaa } = require('../dist/sigaa-main');
+const { Sigaa } = require('sigaa-api');
 const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br'
 });
@@ -26,7 +26,6 @@ const main = async () => {
     for (const activity of activities) {
       console.log(`${activity.course.title} -> ${activity.title}`)
       console.log(`${new Date(activity.date)}`)
-      console.log(` `)
     }
   }
   return await account.logoff();
