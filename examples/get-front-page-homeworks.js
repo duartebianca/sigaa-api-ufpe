@@ -3,8 +3,8 @@ const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br'
 });
 // coloque seu usuário
-const username = '';
-const password = '';
+const username = 'gabriel.kd';
+const password = '25dmpssX';
 
 const main = async () => {
   const account = await sigaa.login(username, password); // login
