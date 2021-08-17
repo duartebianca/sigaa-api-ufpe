@@ -27,14 +27,21 @@ export interface StudentBond {
    * @returns Promise with array of courses.
    */
   getCourses(allPeriods?: boolean): Promise<CourseStudent[]>;
+
+  getFrontPageActivities(): Promise<FrontPageActivities[]>;
 }
 
+export type FrontPageActivities = {
+  title: string;
+  course: { title: string };
+  date: string;
+  done: boolean;
+};
 /**
  * Class to represent student bond.
  * @category Internal
  */
 export class SigaaStudentBond implements StudentBond {
-
   constructor(
     private http: HTTP,
     private parser: Parser,
@@ -42,7 +49,7 @@ export class SigaaStudentBond implements StudentBond {
     readonly program: string,
     readonly registration: string,
     readonly bondSwitchUrl: URL | null
-  ) { }
+  ) {}
 
   readonly type = 'student';
 
@@ -193,39 +200,64 @@ export class SigaaStudentBond implements StudentBond {
     return listCourses;
   }
 
-  async getFrontPageHomeworks() {
-    const frontPage = await this.http.get('https://sig.ifsc.edu.br/sigaa/verPortalDiscente.do');
+  async getFrontPageActivities(): Promise<FrontPageActivities[]> {
+    const frontPage = await this.http.get(
+      '/sigaa/portais/discente/discente.jsf'
+    );
     const table = frontPage.$('#avaliacao-portal > table');
-    if (table.length === 0) return [];
-    const listCourses: CourseStudent[] = [];
-    const rows = table.find('tbody > tr').toArray();
-    const tableColumnIndexs: Record<string, null | number> = {
-      date: null,
-      homework: null,
-      status: null
-    };
-
-    const tableHeaderCellElements = table.find('thead > tr td').toArray();
-    for (let column = 0; column < tableHeaderCellElements.length; column++) {
-      const cellContent = this.parser.removeTagsHtml(
-        coursesPage.$(tableHeaderCellElements[column]).html()
-      );
-      console.log(cellContent)
-      switch (cellContent) {
-        case 'Data':
-          tableColumnIndexs.date = column
-          break;
-        case 'Atividade':
-          tableColumnIndexs.homework = column;
-          break;
-        case '':
-          tableColumnIndexs.status = column;
-          break;
-      }
-    }
+    const rows = table.find('tbody > tr');
+    const listActivities: FrontPageActivities[] = [];
     for (const row of rows) {
       const cellElements = frontPage.$(row).find('td');
-      console.log(row);
+      const fullText = cellElements.text().replace(/(\r\n|\n|\r|\t)/gm, ' ');
+      const regex = /(\d{2}\/\d{2}\/\d{4})/g;
+      const matchesDate = regex.exec(fullText);
+      if (matchesDate) {
+        // regex para separar horario no padrão do sigaa dd/mm/yyyyHH:MM
+        const horario = fullText.trim().split(/(\d{2}\/\d{2}\/\d{4})/g)[2];
+        const regexHorario = /(\d{2}:\d{2})/g;
+        const matchesHorario = regexHorario.exec(horario);
+        // caso o matchesHorario não funcionar, ele coloca horario padrão
+        let hora = '23';
+        let minuto = '59';
+        if (matchesHorario) {
+          hora = matchesHorario[1].split(':')[0];
+          minuto = matchesHorario[1].split(':')[1];
+        }
+        const [dia, mes, ano] = matchesDate[1].split('/');
+        const dateObject = new Date(
+          `${parseInt(mes)}/${parseInt(dia)}/${parseInt(ano)} ${parseInt(
+            hora
+          )}:${parseInt(minuto)}`
+        );
+        const dateString = dateObject.toISOString();
+
+        const infoText = cellElements.find(' small').text();
+        const isHomework = infoText
+          .replace(/(\r\n|\n|\r|\t)/gm, '')
+          .split(' Tarefa:');
+        const isExam = infoText
+          .replace(/(\r\n|\n|\r|\t)/gm, '')
+          .split(' Avaliação: ');
+        const isQuiz = infoText
+          .replace(/(\r\n|\n|\r|\t)/gm, '')
+          .split(' Questionário:');
+        const [courseName, activityName] =
+          isHomework.length > 1
+            ? isHomework
+            : isExam.length > 1
+            ? isExam
+            : isQuiz.length > 1
+            ? isQuiz
+            : [];
+        listActivities.push({
+          title: activityName,
+          course: { title: courseName },
+          date: dateString,
+          done: false
+        });
+      }
     }
+    return listActivities;
   }
 }
