@@ -1,10 +1,10 @@
-const { Sigaa } = require('sigaa-api');
+const { Sigaa } = require('../dist/sigaa-main');
 const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br'
 });
 // coloque seu usuário
-const username = '';
-const password = '';
+const username = 'gabriel.kd';
+const password = '25dmpssX';
 
 const main = async () => {
   const account = await sigaa.login(username, password); // login
@@ -26,6 +26,7 @@ const main = async () => {
     for (const activity of activities) {
       console.log(`${activity.course.title} -> ${activity.title}`)
       console.log(`${new Date(activity.date)}`)
+      console.log(` `)
     }
   }
   return await account.logoff();
