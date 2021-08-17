@@ -26,6 +26,7 @@ const main = async () => {
     for (const activity of activities) {
       console.log(`${activity.course.title} -> ${activity.title}`)
       console.log(`${new Date(activity.date)}`)
+      console.log(" ") // Para melhorar a leitura
     }
   }
   return await account.logoff();
