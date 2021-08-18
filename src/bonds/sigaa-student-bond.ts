@@ -31,7 +31,7 @@ export interface StudentBond {
   getFrontPageActivities(): Promise<FrontPageActivities[]>;
 }
 
-export type FrontPageActivities = {
+export interface FrontPageActivities {
   title: string;
   course: { title: string };
   date: string;
