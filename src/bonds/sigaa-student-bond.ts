@@ -28,15 +28,15 @@ export interface StudentBond {
    */
   getCourses(allPeriods?: boolean): Promise<CourseStudent[]>;
 
-  getFrontPageActivities(): Promise<FrontPageActivities[]>;
+  getActivities(): Promise<Activity[]>;
 }
 
-export type FrontPageActivities = {
+export interface Activity {
   title: string;
   course: { title: string };
-  date: string;
+  date: Date;
   done: boolean;
-};
+}
 /**
  * Class to represent student bond.
  * @category Internal
@@ -200,16 +200,17 @@ export class SigaaStudentBond implements StudentBond {
     return listCourses;
   }
 
-  async getFrontPageActivities(): Promise<FrontPageActivities[]> {
+  async getActivities(): Promise<Activity[]> {
     const frontPage = await this.http.get(
       '/sigaa/portais/discente/discente.jsf'
     );
     const table = frontPage.$('#avaliacao-portal > table');
     const rows = table.find('tbody > tr');
-    const listActivities: FrontPageActivities[] = [];
+    const listActivities: Activity[] = [];
     for (const row of rows) {
       const cellElements = frontPage.$(row).find('td');
-      const fullText = cellElements.text().replace(/(\r\n|\n|\r|\t)/gm, ' ');
+      const fullText = this.parser.removeTagsHtml(cellElements.html());
+      
       const regex = /(\d{2}\/\d{2}\/\d{4})/g;
       const matchesDate = regex.exec(fullText);
       if (matchesDate) {
@@ -230,9 +231,12 @@ export class SigaaStudentBond implements StudentBond {
             hora
           )}:${parseInt(minuto)}`
         );
-        const dateString = dateObject.toISOString();
+        const isDone =
+          cellElements.find('img').attr('src') === '/sigaa/img/check.png';
 
-        const infoText = cellElements.find(' small').text();
+        const infoText = this.parser.removeTagsHtml(
+          cellElements.find('small').html()
+        );
         const isHomework = infoText
           .replace(/(\r\n|\n|\r|\t)/gm, '')
           .split(' Tarefa:');
@@ -253,8 +257,8 @@ export class SigaaStudentBond implements StudentBond {
         listActivities.push({
           title: activityName,
           course: { title: courseName },
-          date: dateString,
-          done: false
+          date: dateObject,
+          done: isDone
         });
       }
     }
