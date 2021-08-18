@@ -45,7 +45,7 @@ export class SigaaPageCacheWithBond implements PageCacheWithBond {
     if (bondSwitchUrl !== this.currentBond) {
       const oldCacheInstance = this.cacheInstances.get(bondSwitchUrl);
       if (oldCacheInstance) {
-        this.currentCache === oldCacheInstance;
+        this.currentCache = oldCacheInstance;
       } else {
         const newCacheInstance = this.cachePageFactory.createPageCache();
         this.cacheInstances.set(bondSwitchUrl, newCacheInstance);

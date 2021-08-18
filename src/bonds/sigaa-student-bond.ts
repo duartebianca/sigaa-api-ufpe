@@ -6,6 +6,9 @@ import {
   CourseStudent,
   CourseStudentData
 } from '@courses/sigaa-course-student';
+import { Homework } from '@attachments/sigaa-homework-student';
+import { Exam } from '@courseResources/sigaa-exam-student';
+import { Activity, ActivityFactory } from '@activity/sigaa-activity-factory';
 
 /**
  * Abstraction to represent a student bond.
@@ -30,13 +33,23 @@ export interface StudentBond {
 
   getActivities(): Promise<Activity[]>;
 }
-
-export interface Activity {
-  title: string;
-  course: { title: string };
+export interface ActivityTypeHomework {
+  type: 'homework';
+  course: CourseStudent;
+  homework: Homework;
   date: Date;
   done: boolean;
 }
+
+export interface ActivityTypeExem {
+  type: 'exam';
+  title: string;
+  course: CourseStudent;
+  exem: Exam;
+  date: Date;
+  done: boolean;
+}
+
 /**
  * Class to represent student bond.
  * @category Internal
@@ -46,6 +59,7 @@ export class SigaaStudentBond implements StudentBond {
     private http: HTTP,
     private parser: Parser,
     private courseFactory: CourseFactory,
+    private activityFactory: ActivityFactory,
     readonly program: string,
     readonly registration: string,
     readonly bondSwitchUrl: URL | null
@@ -156,7 +170,7 @@ export class SigaaStudentBond implements StudentBond {
           cellElements.eq(tableColumnIndexs.title).html()
         );
 
-        const [title, code] = fullname.split(' - ');
+        const [code, title] = fullname.split(' - ');
 
         const buttonCoursePage = cellElements
           .eq(tableColumnIndexs.button)
@@ -205,61 +219,80 @@ export class SigaaStudentBond implements StudentBond {
       '/sigaa/portais/discente/discente.jsf'
     );
     const table = frontPage.$('#avaliacao-portal > table');
-    const rows = table.find('tbody > tr');
+    const rows = table.find('tbody > tr').toArray();
     const listActivities: Activity[] = [];
     for (const row of rows) {
       const cellElements = frontPage.$(row).find('td');
-      const fullText = this.parser.removeTagsHtml(cellElements.html());
-      
-      const regex = /(\d{2}\/\d{2}\/\d{4})/g;
-      const matchesDate = regex.exec(fullText);
-      if (matchesDate) {
-        // regex para separar horario no padrão do sigaa dd/mm/yyyyHH:MM
-        const horario = fullText.trim().split(/(\d{2}\/\d{2}\/\d{4})/g)[2];
-        const regexHorario = /(\d{2}:\d{2})/g;
-        const matchesHorario = regexHorario.exec(horario);
-        // caso o matchesHorario não funcionar, ele coloca horario padrão
-        let hora = '23';
-        let minuto = '59';
-        if (matchesHorario) {
-          hora = matchesHorario[1].split(':')[0];
-          minuto = matchesHorario[1].split(':')[1];
-        }
-        const [dia, mes, ano] = matchesDate[1].split('/');
-        const dateObject = new Date(
-          `${parseInt(mes)}/${parseInt(dia)}/${parseInt(ano)} ${parseInt(
-            hora
-          )}:${parseInt(minuto)}`
-        );
-        const isDone =
-          cellElements.find('img').attr('src') === '/sigaa/img/check.png';
+      const dateCellContent = this.parser.removeTagsHtml(
+        cellElements.eq(1).html()
+      );
 
-        const infoText = this.parser.removeTagsHtml(
-          cellElements.find('small').html()
+      const date = this.parser.parseDates(dateCellContent, 1)[0];
+
+      const done =
+        cellElements.eq(0).find('img').attr('src') === '/sigaa/img/check.png' ||
+        date.valueOf() < Date.now();
+
+      const infoTextLines = this.parser
+        .removeTagsHtml(cellElements.eq(2).find('small').html())
+        .split('\n');
+
+      if (infoTextLines.length !== 2)
+        throw new Error(
+          'SIGAA: The description of the activity does not correspond to what was expected.'
         );
-        const isHomework = infoText
-          .replace(/(\r\n|\n|\r|\t)/gm, '')
-          .split(' Tarefa:');
-        const isExam = infoText
-          .replace(/(\r\n|\n|\r|\t)/gm, '')
-          .split(' Avaliação: ');
-        const isQuiz = infoText
-          .replace(/(\r\n|\n|\r|\t)/gm, '')
-          .split(' Questionário:');
-        const [courseName, activityName] =
-          isHomework.length > 1
-            ? isHomework
-            : isExam.length > 1
-            ? isExam
-            : isQuiz.length > 1
-            ? isQuiz
-            : [];
-        listActivities.push({
-          title: activityName,
-          course: { title: courseName },
-          date: dateObject,
-          done: isDone
-        });
+
+      const courseTitle = infoTextLines[0];
+      const [type, activityTitle] = infoTextLines[1].split(': ');
+
+      if (type === 'Questionário' || type === 'Tarefa') {
+        const JSFCLJS = cellElements
+          .eq(2)
+          .find('small a[onclick]')
+          .attr('onclick');
+        if (!JSFCLJS) throw new Error('SIGAA: Activity without link.');
+        const form = frontPage.parseJSFCLJS(JSFCLJS);
+
+        if (type === 'Questionário') {
+          listActivities.push(
+            this.activityFactory.createActivityQuiz(
+              {
+                courseTitle,
+                quizTitle: activityTitle,
+                id: form.postValues.id,
+                form,
+                done,
+                date
+              },
+              this
+            )
+          );
+        } else {
+          listActivities.push(
+            this.activityFactory.createActivityHomework(
+              {
+                courseTitle,
+                homeworkTitle: activityTitle,
+                form,
+                done,
+                date
+              },
+              this
+            )
+          );
+        }
+      } else if (type === 'Avaliação') {
+        listActivities.push(
+          this.activityFactory.createActivityExam(
+            {
+              courseTitle,
+              examDescription: activityTitle,
+              done,
+              date
+            },
+            this
+          )
+        );
       }
     }
     return listActivities;

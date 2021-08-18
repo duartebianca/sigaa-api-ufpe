@@ -1,4 +1,4 @@
-import { Page } from '../sigaa-page';
+import { Page } from '@session/sigaa-page';
 
 /**
  * Abstraction representing class that logs in.

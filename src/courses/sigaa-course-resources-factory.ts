@@ -2,7 +2,7 @@ import { Parser } from '@helpers/sigaa-parser';
 import { HTTP } from '@session/sigaa-http';
 
 import { UpdatableResourceCallback } from '@resources/updatable-resource';
-import { News, NewsData, SigaaNews } from './resources/sigaa-news-student';
+import { News, NewsData, SigaaNews } from '@courseResources/sigaa-news-student';
 import { Quiz, QuizData, SigaaQuiz } from '@attachments/sigaa-quiz-student';
 import { FileData, SigaaFile, File } from '@resources/sigaa-file';
 
@@ -34,6 +34,7 @@ import {
   Survey,
   SurveyData
 } from '@attachments/sigaa-survey-student';
+import { sharedReturn } from '@helpers/sigaa-shared-return-decorator-factory';
 
 /**
  * Create instances of course resources.
@@ -41,50 +42,50 @@ import {
  */
 export interface CourseResourcesFactory {
   createWebContentFromWebContentData(
-    http: HTTP,
     options: WebContentData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): WebContent;
 
   createLessonFromLessonData(
-    http: HTTP,
     options: LessonData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): Lesson;
 
   createFileFromFileData(
-    http: HTTP,
     options: FileData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): File;
 
   createHomeworkFromHomeworkData(
-    http: HTTP,
     homeworkOptions: HomeworkData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): Homework;
 
   createForumFromForumData(
-    http: HTTP,
     options: ForumData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): CourseForum;
 
   createNewsFromNewsData(
-    http: HTTP,
     newsOptions: NewsData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): News;
 
   createQuizFromQuizData(
-    http: HTTP,
     quizData: QuizData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): Quiz;
 
   createSurveyFromSurveyData(
-    http: HTTP,
     surveyData: SurveyData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): Survey;
 }
@@ -96,41 +97,45 @@ export interface CourseResourcesFactory {
 export class SigaaCourseResourcesFactory implements CourseResourcesFactory {
   constructor(private parser: Parser) {}
 
+  @sharedReturn()
   createHomeworkFromHomeworkData(
-    http: HTTP,
     options: HomeworkData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): SigaaHomework {
     return new SigaaHomework(http, this, options, updateCallback);
   }
 
+  @sharedReturn()
   createWebContentFromWebContentData(
-    http: HTTP,
     options: WebContentData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): SigaaWebContent {
     return new SigaaWebContent(http, this.parser, options, updateCallback);
   }
 
   createLessonFromLessonData(
-    http: HTTP,
     options: LessonData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): SigaaLesson {
     return new SigaaLesson(options, updateCallback);
   }
 
+  @sharedReturn()
   createFileFromFileData(
-    http: HTTP,
     options: FileData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): SigaaFile {
     return new SigaaFile(http, options, updateCallback);
   }
 
+  @sharedReturn()
   createForumFromForumData(
-    http: HTTP,
     options: ForumData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): SigaaCourseForum {
     return new SigaaCourseForum(
@@ -142,25 +147,28 @@ export class SigaaCourseResourcesFactory implements CourseResourcesFactory {
     );
   }
 
+  @sharedReturn()
   createNewsFromNewsData(
-    http: HTTP,
     options: NewsData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): SigaaNews {
     return new SigaaNews(http, this.parser, options, updateCallback);
   }
 
+  @sharedReturn()
   createQuizFromQuizData(
-    http: HTTP,
     options: QuizData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): SigaaQuiz {
     return new SigaaQuiz(http, options, updateCallback);
   }
 
+  @sharedReturn()
   createSurveyFromSurveyData(
-    http: HTTP,
     options: SurveyData,
+    http: HTTP,
     updateCallback: UpdatableResourceCallback
   ): SigaaSurvey {
     return new SigaaSurvey(options, updateCallback);

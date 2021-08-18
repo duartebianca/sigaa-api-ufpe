@@ -1,8 +1,8 @@
 import { LoginStatus } from '../../sigaa-types';
 import { URL } from 'url';
-import { HTTP } from '../sigaa-http';
-import { Page, SigaaForm } from '../sigaa-page';
-import { Session } from '../sigaa-session';
+import { HTTP } from '@session/sigaa-http';
+import { Page, SigaaForm } from '@session/sigaa-page';
+import { Session } from '@session/sigaa-session';
 import { Login } from './sigaa-login';
 
 /**

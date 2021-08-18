@@ -28,8 +28,8 @@ export class CourseResourcesManager {
   ) {
     this.lessons = new ResourceManager((options) =>
       courseResourcesFactory.createLessonFromLessonData(
-        http,
         options,
+        http,
         async () => {
           await course.getLessons();
         }
@@ -37,15 +37,15 @@ export class CourseResourcesManager {
     );
 
     this.files = new ResourceManager((options) =>
-      courseResourcesFactory.createFileFromFileData(http, options, async () => {
+      courseResourcesFactory.createFileFromFileData(options, http, async () => {
         await course.getFiles();
       })
     );
 
     this.homework = new ResourceManager((options) =>
       courseResourcesFactory.createHomeworkFromHomeworkData(
-        http,
         options,
+        http,
         async () => {
           await course.getHomeworks();
         }
@@ -54,8 +54,8 @@ export class CourseResourcesManager {
 
     this.forums = new ResourceManager((options) =>
       courseResourcesFactory.createForumFromForumData(
-        http,
         options,
+        http,
         async () => {
           await course.getForums();
         }
@@ -63,21 +63,21 @@ export class CourseResourcesManager {
     );
 
     this.quizzes = new ResourceManager((options) =>
-      courseResourcesFactory.createQuizFromQuizData(http, options, async () => {
+      courseResourcesFactory.createQuizFromQuizData(options, http, async () => {
         await course.getQuizzes();
       })
     );
 
     this.news = new ResourceManager((options) =>
-      courseResourcesFactory.createNewsFromNewsData(http, options, async () => {
+      courseResourcesFactory.createNewsFromNewsData(options, http, async () => {
         await course.getNews();
       })
     );
 
     this.webContents = new ResourceManager((options) =>
       courseResourcesFactory.createWebContentFromWebContentData(
-        http,
         options,
+        http,
         async () => {
           await course.getWebContents();
         }
@@ -86,8 +86,8 @@ export class CourseResourcesManager {
 
     this.survey = new ResourceManager((options) =>
       courseResourcesFactory.createSurveyFromSurveyData(
-        http,
         options,
+        http,
         async () => {
           await course.getSurveys();
         }

@@ -1,3 +1,4 @@
+import { ActivityFactory } from '@activity/sigaa-activity-factory';
 import { CourseFactory } from '@courses/sigaa-course-student-factory';
 import { Parser } from '@helpers/sigaa-parser';
 import { HTTP } from '@session/sigaa-http';
@@ -46,7 +47,8 @@ export class SigaaBondFactory implements BondFactory {
   constructor(
     private httpFactory: HTTPFactory,
     private parser: Parser,
-    private courseFactory: CourseFactory
+    private courseFactory: CourseFactory,
+    private activityFactory: ActivityFactory
   ) {}
 
   /**
@@ -71,6 +73,7 @@ export class SigaaBondFactory implements BondFactory {
       http,
       this.parser,
       this.courseFactory,
+      this.activityFactory,
       program,
       registration,
       bondSwitchUrl

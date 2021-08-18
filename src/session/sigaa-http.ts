@@ -531,9 +531,8 @@ export class SigaaHTTP implements HTTP {
         response.headers.location = response.headers.location[0];
       }
 
-      const contentTypeEncoding = response.headers['content-type']?.match(
-        /charset=[^;]+/
-      );
+      const contentTypeEncoding =
+        response.headers['content-type']?.match(/charset=[^;]+/);
 
       let bodyStream:
         | http.IncomingMessage

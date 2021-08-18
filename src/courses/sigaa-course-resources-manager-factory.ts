@@ -18,7 +18,8 @@ export interface CourseResourcesManagerFactory {
  * @category Internal
  */
 export class SigaaCourseResourceManagerFactory
-  implements CourseResourcesManagerFactory {
+  implements CourseResourcesManagerFactory
+{
   constructor(private courseResourcesFactory: CourseResourcesFactory) {}
 
   createCourseResourcesManager(

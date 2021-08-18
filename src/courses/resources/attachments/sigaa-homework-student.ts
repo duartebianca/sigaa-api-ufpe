@@ -33,6 +33,7 @@ export interface HomeworkData extends UpdatableResourceData {
 export interface Homework extends UpdatableResource<HomeworkData> {
   readonly type: 'homework';
   readonly title: string;
+  readonly id: string | null;
   getFlagHaveGrade(): Promise<boolean>;
   getFlagIsGroupHomework(): Promise<boolean>;
 
@@ -49,7 +50,8 @@ export interface Homework extends UpdatableResource<HomeworkData> {
  */
 export class SigaaHomework
   extends AbstractUpdatableResource
-  implements Homework {
+  implements Homework
+{
   readonly type = 'homework';
 
   private _title!: string;
@@ -175,8 +177,8 @@ export class SigaaHomework
 
     if (!this._file) {
       this._file = this.courseResourcesFactory.createFileFromFileData(
-        this.http,
         file,
+        this.http,
         async () => {
           throw new Error('SIGAA: Invalid file in Homework.');
         }

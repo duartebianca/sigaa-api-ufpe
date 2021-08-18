@@ -1,7 +1,9 @@
 const { Sigaa } = require('sigaa-api');
+
 const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br'
 });
+
 // coloque seu usuário
 const username = '';
 const password = '';
@@ -21,13 +23,56 @@ const main = async () => {
 
     console.log('Matrícula do vínculo: ' + bond.registration);
     console.log('Curso do vínculo: ' + bond.program);
-
     const activities = await bond.getActivities();
+
     for (const activity of activities) {
-      const date = activity.date
-      console.log(`${activity.course.title} -> ${activity.title}`);
-      console.log(`Data de entrega: ${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`);
+      const date = activity.date;
+
+      switch (activity.type) {
+        case 'homework':
+          console.log(`${activity.courseTitle} -> ${activity.homeworkTitle}`);
+          /** É possivel acessar a tarefa usando:
+           * await activity.getHomework();
+           * Ou pegar o id da tarefa usando:
+           * activity.homeworkId
+           **/
+          break;
+        case 'quiz':
+          /**
+           * Também, é possivel acessar o quiz usando:
+           * await activity.getQuiz();
+           * Ou pegar o id do quiz usando:
+           * activity.quizId
+           **/
+          console.log(`${activity.courseTitle} -> ${activity.quizTitle}`);
+          break;
+        case 'exam':
+          /**
+           * Da mesma forma, para acessar a avaliação:
+           * await activity.getExam();
+           **/
+          console.log(`${activity.courseTitle} -> ${activity.examDescription}`);
+          break;
+      }
+
+      /**
+       * Para accessar a turma da atividade, você pode usar:
+       * await activity.getCourse();
+       **/
+
+      /**
+       * Se o tipo da atividade for quiz ou homework, você pode pegar o id da turma usando:
+       * activity.courseId;
+       */
+
+      //Data da atividade
+      console.log(
+        `Data: ${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`
+      );
+
+      // Retorna verdadeiro se a atividade já foi entregue ou se o prazo da atividade já terminou
       console.log(`Entregue: ${activity.done}`);
+
       console.log(' '); // Para melhorar a leitura
     }
   }

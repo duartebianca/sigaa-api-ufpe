@@ -228,6 +228,11 @@ export class SigaaCourseStudent implements CourseStudent {
   }
 
   /**
+   *
+   */
+  private currentCoursePage = 'Principal';
+
+  /**
    * Request the course page using the course ID,
    * it is slower than requestCoursePageUsingForm,
    * but works if the form is invalid.
@@ -269,12 +274,13 @@ export class SigaaCourseStudent implements CourseStudent {
    * it is faster than requestCoursePageUsingId,
    * but don`t works if the form is invalid or expired.
    */
-  private async requestCoursePageUsingForm() {
+  private async requestCoursePageUsingForm(useCache = true) {
     const page = await this.http.post(
       this.form.action.href,
       this.form.postValues,
       {
-        shareSameRequest: true
+        shareSameRequest: true,
+        noCache: !useCache
       }
     );
     if (page.statusCode === 200) {
@@ -292,9 +298,8 @@ export class SigaaCourseStudent implements CourseStudent {
    * fallback to requestCoursePageUsingId.
    * @returns Response page.
    */
-  private async requestCoursePage(): Promise<Page> {
-    if (this.currentPageCache) return this.currentPageCache;
-    return this.requestCoursePageUsingForm().catch(() =>
+  private async requestCoursePage(useCache = true): Promise<Page> {
+    return this.requestCoursePageUsingForm(useCache).catch(() =>
       this.requestCoursePageUsingId()
     );
   }
@@ -306,26 +311,32 @@ export class SigaaCourseStudent implements CourseStudent {
    */
   private async getCourseSubMenu(
     buttonLabel: string,
-    retry = false
+    retry = true
   ): Promise<Page> {
-    const page = await this.requestCoursePage();
+    if (buttonLabel === this.currentCoursePage) {
+      if (this.currentPageCache) return this.currentPageCache;
+    }
 
-    const getBtnEl = page
+    const page = await this.requestCoursePage(retry);
+
+    const buttonElement = page
       .$('div.itemMenu')
       .toArray()
-      .find((buttonEl) => {
-        return (
+      .find(
+        (buttonEl) =>
           this.parser.removeTagsHtml(page.$(buttonEl).html()) === buttonLabel
-        );
-      });
-    if (!getBtnEl) {
+      );
+
+    if (!buttonElement) {
       throw new Error('SIGAA: Course sub menu button not found.');
     }
-    const buttonOnClick = page.$(getBtnEl).parent().attr('onclick');
+
+    const buttonOnClick = page.$(buttonElement).parent().attr('onclick');
     if (!buttonOnClick)
       throw new Error(
         'SIGAA: Course sub menu button does not have the onclick event.'
       );
+
     const form = page.parseJSFCLJS(buttonOnClick);
     try {
       const pageResponse = await this.http.post(
@@ -335,13 +346,25 @@ export class SigaaCourseStudent implements CourseStudent {
       if (page.statusCode !== 200)
         throw new Error('SIGAA: Invalid course page status code.');
 
+      const pageCourseTitle = this.parser.removeTagsHtml(
+        pageResponse.$('#linkNomeTurma').html()
+      );
+
+      if (pageCourseTitle !== this.title) {
+        throw new Error(
+          'SIGAA: Using the old page caused the change to the last accessed course instead of the requested course.'
+        );
+      }
+
       if (pageResponse.bodyDecoded.includes('Menu Turma Virtual')) {
         this.currentPageCache = pageResponse;
       }
+      this.currentCoursePage = buttonLabel;
       return pageResponse;
     } catch (err) {
       if (retry) {
         this.currentPageCache = undefined;
+        this.currentCoursePage = 'Principal';
         return this.getCourseSubMenu(buttonLabel, false);
       }
       throw err;
@@ -376,7 +399,7 @@ export class SigaaCourseStudent implements CourseStudent {
    * @inheritdoc
    */
   async getLessons(): Promise<Lesson[]> {
-    const page = await this.requestCoursePage();
+    const page = await this.getCourseSubMenu('Principal');
     this.lessonParser.parserPage(page);
     return this.resources.lessons.instances;
   }
@@ -616,7 +639,7 @@ export class SigaaCourseStudent implements CourseStudent {
       )[0];
       const buttonSendAnswersElement = cells.eq(3).find('a[onclick]');
       let formSendAnswers;
-      if (buttonSendAnswersElement) {
+      if (buttonSendAnswersElement.length > 0) {
         const buttonOnclick = buttonSendAnswersElement.attr('onclick');
         if (!buttonOnclick)
           throw new Error(
@@ -626,7 +649,7 @@ export class SigaaCourseStudent implements CourseStudent {
       }
       const buttonViewAnswersSubmittedElement = cells.eq(4).find('a[onclick]');
       let formViewAnswersSubmitted;
-      if (buttonViewAnswersSubmittedElement) {
+      if (buttonViewAnswersSubmittedElement.length > 0) {
         const buttonOnclick = buttonViewAnswersSubmittedElement.attr('onclick');
         if (!buttonOnclick)
           throw new Error(
@@ -725,9 +748,7 @@ export class SigaaCourseStudent implements CourseStudent {
    */
   async getHomeworks(): Promise<Homework[]> {
     const page = await this.getCourseSubMenu('Tarefas');
-
     const tables = page.$('.listing').toArray();
-
     if (!tables) return [];
     const usedHomeworksIds = [];
     for (const table of tables) {
@@ -818,6 +839,7 @@ export class SigaaCourseStudent implements CourseStudent {
       }
     }
     this.resources.homework.keepOnly(usedHomeworksIds);
+
     return this.resources.homework.instances;
   }
 

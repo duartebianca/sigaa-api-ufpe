@@ -110,7 +110,8 @@ export interface CourseForum extends UpdatableResource<ForumData> {
  */
 export class SigaaCourseForum
   extends AbstractUpdatableResource
-  implements CourseForum {
+  implements CourseForum
+{
   /**
    * Type of instance
    */
@@ -295,8 +296,8 @@ export class SigaaCourseForum
               this._file.update(fileObj);
             } else {
               this._file = this.courseResourcesFactory.createFileFromFileData(
-                this.http,
                 fileObj,
+                this.http,
                 async () => {
                   await this.getForumPage();
                 }

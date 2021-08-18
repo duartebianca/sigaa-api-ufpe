@@ -39,6 +39,10 @@ import {
   SigaaLessonParserFactory
 } from '@courses/sigaa-lesson-parser-factory';
 import { XOR } from './sigaa-types';
+import {
+  ActivityFactory,
+  SigaaActivityFactory
+} from '@activity/sigaa-activity-factory';
 
 /**
  * @category Internal
@@ -56,11 +60,17 @@ interface SigaaConstructorURL {
 interface WithAccountFactory {
   accountFactory?: AccountFactory;
 }
+
 interface WithBondFactory {
   bondFactory: BondFactory;
 }
+
 interface WithCourseFactory {
   courseFactory: CourseFactory;
+}
+
+interface WithActivityFactory {
+  activityFactory?: ActivityFactory;
 }
 
 type WithoutCourseFactory = {
@@ -69,6 +79,7 @@ type WithoutCourseFactory = {
   { courseResourcesManagerFactory?: CourseResourcesManagerFactory },
   { courseResourcesFactory?: CourseResourcesFactory }
 >;
+
 /**
  * @category Internal
  */
@@ -85,7 +96,10 @@ export type SigaaOptionsConstructor = SigaaCommonConstructorOptions &
   XOR<SigaaConstructorURL, SigaaConstructorHTTP> &
   XOR<
     WithAccountFactory,
-    XOR<WithBondFactory, XOR<WithCourseFactory, WithoutCourseFactory>>
+    XOR<
+      WithBondFactory,
+      WithActivityFactory & XOR<WithCourseFactory, WithoutCourseFactory>
+    >
   >;
 
 /**
@@ -185,8 +199,15 @@ export class Sigaa {
       if ('bondFactory' in options && options.bondFactory) {
         bondFactory = options.bondFactory;
       } else {
-        let courseFactory: CourseFactory;
+        let activityFactory: ActivityFactory;
 
+        if ('activityFactory' in options && options.activityFactory) {
+          activityFactory = options.activityFactory;
+        } else {
+          activityFactory = new SigaaActivityFactory();
+        }
+
+        let courseFactory: CourseFactory;
         if ('courseFactory' in options && options.courseFactory) {
           courseFactory = options.courseFactory;
         } else {
@@ -212,9 +233,8 @@ export class Sigaa {
               );
             }
 
-            courseResourcesManagerFactory = new SigaaCourseResourceManagerFactory(
-              courseResourcesFactory
-            );
+            courseResourcesManagerFactory =
+              new SigaaCourseResourceManagerFactory(courseResourcesFactory);
           }
 
           let lessonParserFactory: LessonParserFactory;
@@ -236,7 +256,8 @@ export class Sigaa {
         bondFactory = new SigaaBondFactory(
           this.httpFactory,
           this.parser,
-          courseFactory
+          courseFactory,
+          activityFactory
         );
       }
       this.accountFactory = new SigaaAccountFactory(
