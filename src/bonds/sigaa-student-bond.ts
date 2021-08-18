@@ -210,7 +210,7 @@ export class SigaaStudentBond implements StudentBond {
     for (const row of rows) {
       const cellElements = frontPage.$(row).find('td');
       const fullText = this.parser.removeTagsHtml(cellElements.html());
-      //const  = cellElements.text().replace(/(\r\n|\n|\r|\t)/gm, ' ');
+      
       const regex = /(\d{2}\/\d{2}\/\d{4})/g;
       const matchesDate = regex.exec(fullText);
       if (matchesDate) {
