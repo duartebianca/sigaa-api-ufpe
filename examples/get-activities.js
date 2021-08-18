@@ -1,4 +1,4 @@
-const { Sigaa } = require('sigaa-api');
+const { Sigaa } = require('../dist/sigaa-main');
 const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br'
 });
@@ -22,11 +22,13 @@ const main = async () => {
     console.log('Matrícula do vínculo: ' + bond.registration);
     console.log('Curso do vínculo: ' + bond.program);
 
-    const activities = await bond.getFrontPageActivities();
+    const activities = await bond.getActivities();
     for (const activity of activities) {
-      console.log(`${activity.course.title} -> ${activity.title}`)
-      console.log(`${new Date(activity.date)}`)
-      console.log(" ") // Para melhorar a leitura
+      const date = activity.date
+      console.log(`${activity.course.title} -> ${activity.title}`);
+      console.log(`Data de entrega: ${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`);
+      console.log(`Entregue: ${activity.done}`);
+      console.log(' '); // Para melhorar a leitura
     }
   }
   return await account.logoff();
