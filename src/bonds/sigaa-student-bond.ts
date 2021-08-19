@@ -170,8 +170,8 @@ export class SigaaStudentBond implements StudentBond {
           cellElements.eq(tableColumnIndexs.title).html()
         );
 
-        const [code, title] = fullname.split(' - ');
-
+        const [code, ...titleSlices] = fullname.split(' - ');
+        const title = titleSlices.join(' - ');
         const buttonCoursePage = cellElements
           .eq(tableColumnIndexs.button)
           .find('a[onclick]');

@@ -1,12 +1,13 @@
-const { Sigaa } = require('sigaa-api');
+const { Sigaa } = require('../dist/sigaa-all-types');
 
 const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br'
 });
 
 // coloque seu usuário
-const username = '';
-const password = '';
+const username = process.env.SIGAA_USERNAME;
+const password = process.env.SIGAA_PASSWORD;
+
 
 const main = async () => {
   const account = await sigaa.login(username, password); // login

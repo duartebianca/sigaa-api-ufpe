@@ -346,11 +346,18 @@ export class SigaaCourseStudent implements CourseStudent {
       if (page.statusCode !== 200)
         throw new Error('SIGAA: Invalid course page status code.');
 
-      const pageCourseTitle = this.parser.removeTagsHtml(
-        pageResponse.$('#linkNomeTurma').html()
-      );
+      let pageCourseCode: string | undefined;
+      if (buttonLabel === 'Ver Notas') {
+        pageCourseCode = this.parser
+          .removeTagsHtml(pageResponse.$('#relatorio h3').html())
+          .split(' - ')[0];
+      } else {
+        pageCourseCode = this.parser
+          .removeTagsHtml(pageResponse.$('#linkCodigoTurma').html())
+          .replace(/ -$/, '');
+      }
 
-      if (pageCourseTitle !== this.title) {
+      if (pageCourseCode !== this.code) {
         throw new Error(
           'SIGAA: Using the old page caused the change to the last accessed course instead of the requested course.'
         );

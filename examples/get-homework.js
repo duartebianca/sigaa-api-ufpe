@@ -1,12 +1,12 @@
-const { Sigaa } = require('sigaa-api');
+const { Sigaa } = require('../dist/sigaa-all-types');
 
 const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br'
 });
 
 // coloque seu usuário
-const username = '';
-const password = '';
+const username = process.env.SIGAA_USERNAME;
+const password = process.env.SIGAA_PASSWORD;
 
 const main = async () => {
   const account = await sigaa.login(username, password); // login
@@ -29,40 +29,9 @@ const main = async () => {
     const courses = await bond.getCourses();
 
     // Para cada turma
-    for (const course of courses) {
-      console.log(course.title);
-      const homeworkList = await course.getHomeworks();
-      for (const homework of homeworkList) {
-        console.log(homework.title);
-        try {
-          // Pode gerar um erro se a tarefa não tem arquivo ou se você já enviou a resposta para a tarefa
-          // E para baixar o arquivo é a mesma coisa do exemplo download-all-files file.download(caminho)
-          const file = await homework.getAttachmentFile();
-          console.log(file.title);
-        } catch (err) {
-          console.log(err.message);
-        }
-        console.log(await homework.getDescription());
-
-        // Uma marcador (verdadeiro ou falso) que indica se a tarefa vale nota
-        console.log(
-          (await homework.getFlagHaveGrade()) ? 'Vale nota' : 'Não vale nota'
-        );
-
-        // Uma marcador (verdadeiro ou falso) que indica se a tarefa é em grupo
-        console.log(
-          (await homework.getFlagIsGroupHomework()) ? 'É em grupo' : 'É individual'
-        );
-
-        // A data de início para envio da tarefa
-        console.log('Data de início: ' + homework.startDate);
-
-        // A data de termino para envio da tarefa
-        console.log('Data de início: ' + homework.endDate);
-        console.log('');
-      }
-      console.log('');
-    }
+    await courses[1].getHomeworks();
+    await courses[0].getHomeworks();
+    await courses[1].getNews();
   }
 
   // Encerra a sessão

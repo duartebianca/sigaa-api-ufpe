@@ -1,4 +1,4 @@
-const { Sigaa } = require('sigaa-api');
+const { Sigaa } = require('../dist/sigaa-all-types');
 
 const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br'
