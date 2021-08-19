@@ -1,4 +1,4 @@
-const { Sigaa } = require('../dist/sigaa-all-types');
+const { Sigaa } = require('sigaa-api');
 
 const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br'
@@ -9,7 +9,7 @@ const searchTerm = 'José'; // Nome do professor para procurar
 const searchTeacher = sigaa.search.teacher();
 async function main() {
   try {
-    /**
+    /**z
      * Retorna a lista de campus, você não precisa usar,
      * mas se você quiser filtrar os resultados para um
      * campus específico você pode.
