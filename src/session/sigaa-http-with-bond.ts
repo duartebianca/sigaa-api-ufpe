@@ -27,7 +27,6 @@ export class SigaaHTTPWithBond implements HTTP {
    */
   private async verifyIfBondIsCorrect(): Promise<void> {
     if (this.bondSwitchUrl !== this.bondController.currentBond) {
-      this.pageCacheWithBond.setCurrentBond(this.bondSwitchUrl?.href || null);
       return this.switchBond();
     }
   }
@@ -37,11 +36,16 @@ export class SigaaHTTPWithBond implements HTTP {
    */
   private async switchBond(): Promise<void> {
     if (this.bondSwitchUrl) {
-      const page = await this.http.get(this.bondSwitchUrl.href);
-      const finalPage = await this.http.followAllRedirect(page);
+      const page = await this.http.get(this.bondSwitchUrl.href, {
+        noCache: true
+      });
+      const finalPage = await this.http.followAllRedirect(page, {
+        noCache: true
+      });
       if (finalPage.statusCode !== 200)
         throw new Error('SIGAA: Could not switch bond.');
       this.bondController.currentBond = this.bondSwitchUrl;
+      this.pageCacheWithBond.setCurrentBond(this.bondSwitchUrl);
     }
   }
 

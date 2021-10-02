@@ -10,7 +10,7 @@ export interface PageCacheWithBond extends PageCache {
   /**
    *Define the current bond, each bond has its own cache
    */
-  setCurrentBond(bondSwitchUrl: string | null): void;
+  setCurrentBond(bondSwitchUrl: URL | null): void;
 }
 
 /**
@@ -41,17 +41,18 @@ export class SigaaPageCacheWithBond implements PageCacheWithBond {
   /**
    * @inheritdoc
    */
-  setCurrentBond(bondSwitchUrl: string | null): void {
-    if (bondSwitchUrl !== this.currentBond) {
-      const oldCacheInstance = this.cacheInstances.get(bondSwitchUrl);
+  setCurrentBond(bondSwitchURL: URL | null): void {
+    const bondSwitchURLstring = bondSwitchURL ? bondSwitchURL.href : null;
+    if (bondSwitchURLstring !== this.currentBond) {
+      const oldCacheInstance = this.cacheInstances.get(bondSwitchURLstring);
       if (oldCacheInstance) {
         this.currentCache = oldCacheInstance;
       } else {
         const newCacheInstance = this.cachePageFactory.createPageCache();
-        this.cacheInstances.set(bondSwitchUrl, newCacheInstance);
+        this.cacheInstances.set(bondSwitchURLstring, newCacheInstance);
         this.currentCache = newCacheInstance;
       }
-      this.currentBond = bondSwitchUrl;
+      this.currentBond = bondSwitchURLstring;
     }
   }
 
