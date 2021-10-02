@@ -31,6 +31,7 @@ export type Attachment =
  */
 export interface LessonData extends UpdatableResourceData {
   title: string;
+  id: string;
   contentText: string;
   startDate: Date;
   endDate: Date;
@@ -42,6 +43,7 @@ export interface LessonData extends UpdatableResourceData {
  */
 export interface Lesson extends UpdatableResource<LessonData> {
   readonly title: string;
+  readonly id: string;
   readonly contentText: string;
   readonly endDate: Date;
   readonly startDate: Date;
@@ -53,6 +55,7 @@ export interface Lesson extends UpdatableResource<LessonData> {
  */
 export class SigaaLesson extends AbstractUpdatableResource implements Lesson {
   private _title!: string;
+  private _id!: string;
   private _contextText!: string;
   private _startDate!: Date;
   private _endDate!: Date;
@@ -65,6 +68,7 @@ export class SigaaLesson extends AbstractUpdatableResource implements Lesson {
 
   update(options: LessonData): void {
     this._title = options.title;
+    this._id = options.id;
     this._contextText = options.contentText;
     this._startDate = options.startDate;
     this._endDate = options.endDate;
@@ -75,6 +79,11 @@ export class SigaaLesson extends AbstractUpdatableResource implements Lesson {
   get title(): string {
     this.checkIfItWasClosed();
     return this._title;
+  }
+
+  get id(): string {
+    this.checkIfItWasClosed();
+    return this._id;
   }
 
   get contentText(): string {

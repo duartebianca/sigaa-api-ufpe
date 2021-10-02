@@ -174,7 +174,8 @@ export class SigaaParser implements Parser {
         newText = newText.replace(replace.pattern, replace.replacement);
       }
 
-      const tagRegex = /<script([\S\s]*?)>([\S\s]*?)<\/script>|<!--([\S\s]*?)-->|<style([\S\s]*?)style>|<[^>]+>|\t/gm;
+      const tagRegex =
+        /<script([\S\s]*?)>([\S\s]*?)<\/script>|<!--([\S\s]*?)-->|<style([\S\s]*?)style>|<[^>]+>|\t/gm;
       while (tagRegex.test(newText)) {
         newText = newText.replace(tagRegex, ' ');
       }

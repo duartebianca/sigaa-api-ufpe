@@ -304,6 +304,28 @@ export class SigaaCourseStudent implements CourseStudent {
     );
   }
 
+  private verifyIfCoursePageIsValid(page: Page, buttonLabel: string): void {
+    if (page.statusCode !== 200)
+      throw new Error('SIGAA: Invalid course page status code.');
+
+    let pageCourseCode: string | undefined;
+    if (buttonLabel === 'Ver Notas') {
+      pageCourseCode = this.parser
+        .removeTagsHtml(page.$('#relatorio h3').html())
+        .split(' - ')[0];
+    } else {
+      pageCourseCode = this.parser
+        .removeTagsHtml(page.$('#linkCodigoTurma').html())
+        .replace(/ -$/, '');
+    }
+
+    if (pageCourseCode !== this.code) {
+      throw new Error(
+        'SIGAA: Using the old page caused the change to the last accessed course instead of the requested course.'
+      );
+    }
+  }
+
   /**
    * Receive the name of the side tab and load the tab page
    * @param buttonLabel
@@ -343,26 +365,7 @@ export class SigaaCourseStudent implements CourseStudent {
         form.action.href,
         form.postValues
       );
-      if (page.statusCode !== 200)
-        throw new Error('SIGAA: Invalid course page status code.');
-
-      let pageCourseCode: string | undefined;
-      if (buttonLabel === 'Ver Notas') {
-        pageCourseCode = this.parser
-          .removeTagsHtml(pageResponse.$('#relatorio h3').html())
-          .split(' - ')[0];
-      } else {
-        pageCourseCode = this.parser
-          .removeTagsHtml(pageResponse.$('#linkCodigoTurma').html())
-          .replace(/ -$/, '');
-      }
-
-      if (pageCourseCode !== this.code) {
-        throw new Error(
-          'SIGAA: Using the old page caused the change to the last accessed course instead of the requested course.'
-        );
-      }
-
+      this.verifyIfCoursePageIsValid(pageResponse, buttonLabel);
       if (pageResponse.bodyDecoded.includes('Menu Turma Virtual')) {
         this.currentPageCache = pageResponse;
       }
@@ -402,12 +405,68 @@ export class SigaaCourseStudent implements CourseStudent {
     }
   }
 
+  private static getLessonPageType(page: Page): 'list' | 'paged' | 'unknown' {
+    if (
+      page.$('#formAcoesTurma\\:visualizarAulasEmLista').length === 0 &&
+      page.$('#formAcoesTurma\\:visualizarPaginadas').length === 1
+    )
+      return 'list';
+
+    if (
+      page.$('#formAcoesTurma\\:visualizarAulasEmLista').length === 1 &&
+      page.$('#formAcoesTurma\\:visualizarPaginadas').length === 0
+    )
+      return 'paged';
+    return 'unknown';
+  }
+
   /**
    * @inheritdoc
    */
   async getLessons(): Promise<Lesson[]> {
-    const page = await this.getCourseSubMenu('Principal');
-    this.lessonParser.parserPage(page);
+    const pageLessonsOne = await this.getCourseSubMenu('Principal');
+    let onclick;
+
+    const pageLessonsOneType =
+      SigaaCourseStudent.getLessonPageType(pageLessonsOne);
+
+    if (pageLessonsOneType == 'list') {
+      onclick = pageLessonsOne
+        .$('#formAcoesTurma\\:linkExibirPaginados')
+        .attr('onclick');
+    }
+
+    if (pageLessonsOneType == 'paged') {
+      onclick = pageLessonsOne
+        .$('#formAcoesTurma\\:linkExibirEmLista')
+        .attr('onclick');
+    }
+
+    if (!onclick) throw new Error('SIGAA: Cannot find the lesson list toogle.');
+
+    const form = pageLessonsOne.parseJSFCLJS(onclick);
+    const pageLessonsTwo = await this.http.post(
+      form.action.href,
+      form.postValues
+    );
+
+    this.verifyIfCoursePageIsValid(pageLessonsTwo, 'Principal');
+
+    const pageLessonsTwoType =
+      SigaaCourseStudent.getLessonPageType(pageLessonsTwo);
+    let pageLessonsPaged;
+    let pageLessonsList;
+
+    if (pageLessonsOneType == 'paged' && pageLessonsTwoType == 'list') {
+      pageLessonsPaged = pageLessonsOne;
+      pageLessonsList = pageLessonsTwo;
+    } else if (pageLessonsOneType == 'list' && pageLessonsTwoType == 'paged') {
+      pageLessonsPaged = pageLessonsTwo;
+      pageLessonsList = pageLessonsOne;
+    } else
+      throw new Error('SIGAA: Lesson page types other than expected types.');
+
+    this.lessonParser.parseLessonPages(pageLessonsList, pageLessonsPaged);
     return this.resources.lessons.instances;
   }
 

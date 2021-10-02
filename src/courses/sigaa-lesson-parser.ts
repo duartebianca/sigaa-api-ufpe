@@ -1,5 +1,3 @@
-import { createHash } from 'crypto';
-
 import { Page, SigaaForm } from '@session/sigaa-page';
 import { LinkAttachment } from '@attachments/sigaa-link-student';
 import { VideoAttachment } from '@attachments/sigaa-video-student';
@@ -16,7 +14,7 @@ import { UpdatableResourceData } from '@resources/sigaa-resource-manager';
 /**
  * @category Internal
  */
-interface GenericAttachmentData extends UpdatableResourceData {
+export interface GenericAttachmentData extends UpdatableResourceData {
   title: string;
   description: string;
   form: SigaaForm;
@@ -26,7 +24,7 @@ interface GenericAttachmentData extends UpdatableResourceData {
 /**
  * @category Internal
  */
-interface TextAttachment {
+export interface TextAttachment {
   type: 'text';
   body: string;
 }
@@ -34,8 +32,19 @@ interface TextAttachment {
 /**
  * @category Internal
  */
+export interface LessonIdWithReference {
+  title: string;
+  id: string;
+  startDate: Date;
+  index: number;
+  endDate: Date;
+}
+
+/**
+ * @category Internal
+ */
 export interface LessonParser {
-  parserPage(page: Page): void;
+  parseLessonPages(pageLessonsList: Page, pageLessonsPaged: Page): void;
 }
 
 /**
@@ -54,50 +63,106 @@ export class SigaaLessonParser implements LessonParser {
    * @param page
    */
   private getElements(page: Page): cheerio.Element[] {
-    const contentElement = page.$('#conteudo');
-
-    return contentElement.find('.topico-aula').toArray();
+    return page.$('#conteudo .topico-aula').toArray();
   }
 
-  parserPage(page: Page): void {
-    this.resources.lessons.keepOnly([]);
+  parsePagedPage(page: Page): LessonIdWithReference[] {
+    const lessonOptionElements = page
+      .$('#formAva\\:escolherTopico option')
+      .toArray();
 
-    const lessonsElements = this.getElements(page);
+    const lessonIdsWithReferences: LessonIdWithReference[] = [];
 
-    const usedLessonsIds: string[] = [];
+    for (let index = 0; index < lessonOptionElements.length; index++) {
+      const optionElement = page.$(lessonOptionElements[index]);
+      const lessonId = optionElement.attr('value');
+      if (!lessonId) throw new Error('SIGAA: cannot find the lesson id.');
 
-    for (const lessonElement of lessonsElements) {
-      const lessonOptions = this.lessonParser(page, lessonElement);
-      usedLessonsIds.push(lessonOptions.instanceIndentifier);
-      this.resources.lessons.upsert(lessonOptions);
+      const titleFull = this.parser.removeTagsHtml(optionElement.html());
+
+      const lessonDatesString = titleFull.slice(
+        titleFull.indexOf('(') + 1,
+        titleFull.indexOf(')')
+      );
+      const title = titleFull.slice(titleFull.indexOf(')') + 1).trim();
+
+      const [startDate, endDate] = this.parserDate(lessonDatesString);
+      lessonIdsWithReferences.push({
+        title,
+        index,
+        id: lessonId,
+        startDate,
+        endDate
+      });
     }
-    this.resources.lessons.keepOnly(usedLessonsIds);
+    return lessonIdsWithReferences;
   }
 
+  parseLessonPages(pageLessonsList: Page, pageLessonsPaged: Page): void {
+    const lessonsElements = this.getElements(pageLessonsList);
+
+    const lessonIdsWithReferences = this.parsePagedPage(pageLessonsPaged);
+    this.resources.lessons.keepOnly(
+      lessonsElements.map(
+        (lessonElement, index) =>
+          this.resources.lessons.upsert(
+            this.parseLesson(
+              pageLessonsList,
+              lessonIdsWithReferences[index],
+              lessonElement
+            )
+          )._instanceIndentifier
+      )
+    );
+  }
+
+  private parserDate(lessonDatesString: string): [Date, Date] {
+    let startDateListPage, endDateListPage;
+    try {
+      const lessonDate = this.parser.parseDates(lessonDatesString, 2);
+      startDateListPage = lessonDate[0];
+      endDateListPage = lessonDate[1];
+    } catch (err) {
+      const lessonDate = this.parser.parseDates(lessonDatesString, 1);
+      startDateListPage = lessonDate[0];
+      endDateListPage = lessonDate[0];
+    }
+    return [startDateListPage, endDateListPage];
+  }
   /**
    * Parse each lesson topic HTML element
-   * @param page
    */
-  private lessonParser(page: Page, lessonElement: cheerio.Element): LessonData {
+  private parseLesson(
+    page: Page,
+    lessonIdWithReference: LessonIdWithReference,
+    lessonElement: cheerio.Element
+  ): LessonData {
     const titleElement = page.$(lessonElement).find('.titulo');
     const titleFull = this.parser.removeTagsHtml(titleElement.html());
+
     const lessonDatesString = titleFull.slice(
       titleFull.lastIndexOf('(') + 1,
       titleFull.lastIndexOf(')')
     );
-    let startDate, endDate;
-    try {
-      const lessonDate = this.parser.parseDates(lessonDatesString, 2);
-      startDate = lessonDate[0];
-      endDate = lessonDate[1];
-    } catch (err) {
-      const lessonDate = this.parser.parseDates(lessonDatesString, 1);
-      startDate = lessonDate[0];
-      endDate = lessonDate[0];
-    }
+
+    const [startDate, endDate] = this.parserDate(lessonDatesString);
 
     const title = titleFull.slice(0, titleFull.lastIndexOf('(')).trim();
+
+    if (
+      lessonIdWithReference.startDate.valueOf() !== startDate.valueOf() &&
+      lessonIdWithReference.endDate.valueOf() !== endDate.valueOf() &&
+      lessonIdWithReference.title != title
+    )
+      console.error(
+        new Error(
+          'SIGAA: The result of the lesson list parser is different than expected because the title or date does not match.'
+        )
+      );
+
     const lessonContentElement = page.$(lessonElement).find('.conteudotopico');
+
+    const id = lessonIdWithReference.id;
 
     const lessonHTML = lessonContentElement.html();
     if (!lessonHTML) throw new Error('SIGAA: Lesson without content.');
@@ -118,11 +183,10 @@ export class SigaaLessonParser implements LessonParser {
     const lesson: LessonData = {
       title,
       contentText,
-      startDate,
-      instanceIndentifier: createHash('sha512')
-        .update(`${title} - ${startDate.toString()} - ${endDate.toString()}`)
-        .digest('hex'),
-      endDate,
+      startDate: startDate,
+      id,
+      instanceIndentifier: id,
+      endDate: endDate,
       attachments: attachments.filter(
         (attachment) => attachment.type !== 'text'
       ) as Attachment[]
