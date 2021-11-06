@@ -9,7 +9,7 @@ import { HTTPFactory, SigaaHTTPFactory } from '@session/sigaa-http-factory';
 import { Login } from '@session/login/sigaa-login';
 import { SigaaLoginIFSC } from '@session/login/sigaa-login-ifsc';
 import { SigaaLoginUFPB } from '@session/login/sigaa-login-ufpb';
-import { InstituionType, Session, SigaaSession } from '@session/sigaa-session';
+import { InstitutionType, Session, SigaaSession } from '@session/sigaa-session';
 import { SigaaCookiesController } from '@session/sigaa-cookies-controller';
 import { SigaaPageCacheWithBond } from '@session/sigaa-page-cache-with-bond';
 import { SigaaPageCacheFactory } from '@session/sigaa-page-cache-factory';
@@ -92,7 +92,7 @@ interface SigaaConstructorHTTP {
  * @category Public
  */
 export type SigaaOptionsConstructor = SigaaCommonConstructorOptions &
-  XOR<{ institution?: InstituionType }, { session?: Session }> &
+  XOR<{ institution?: InstitutionType }, { session?: Session }> &
   XOR<SigaaConstructorURL, SigaaConstructorHTTP> &
   XOR<
     WithAccountFactory,
