@@ -1,7 +1,7 @@
 {
     "name": "sigaa-api",
     "description": "Unofficial high performance API for SIGAA IFSC using web scraping.",
-    "version": "1.0.29",
+    "version": "1.0.30",
     "main": "dist/sigaa-all-types.js",
     "types": "dist/sigaa-all-types.d.ts",
     "author": "Geovane Schmitz <contato@geovanems.com.br>",
@@ -30,6 +30,9 @@
         "test": "jest --config jestconfig.json",
         "docs": "typedoc --categorizeByGroup --out docs src/sigaa-all-types.ts",
         "prepare": "npm run build"
+    },
+    "engines": {
+        "node": ">=15.0.0"
     },
     "files": [
         "dist/**"
