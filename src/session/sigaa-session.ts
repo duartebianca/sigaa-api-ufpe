@@ -4,14 +4,14 @@ import { LoginStatus } from '../sigaa-types';
  * The institution serves to adjust interactions with SIGAA.
  * @category Public
  */
-export type InstituionType = 'IFSC' | 'UFPB';
+export type InstitutionType = 'IFSC' | 'UFPB';
 
 /**
  * Sigaa session control
  * @category Internal
  */
 export interface Session {
-  readonly institution: InstituionType;
+  readonly institution: InstitutionType;
   loginStatus: LoginStatus;
 }
 
@@ -19,6 +19,6 @@ export interface Session {
  * @category Internal
  */
 export class SigaaSession implements Session {
-  constructor(public readonly institution: InstituionType = 'IFSC') {}
+  constructor(public readonly institution: InstitutionType = 'IFSC') {}
   loginStatus: LoginStatus = LoginStatus.Unauthenticated;
 }
