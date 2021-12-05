@@ -1,5 +1,3 @@
-import { Page } from '@session/sigaa-page';
-import { Request } from '@session/sigaa-http-session';
 import { PromiseStack, SigaaPromiseStack } from './sigaa-promise-stack';
 
 /**
@@ -77,8 +75,3 @@ export class SigaaRequestStack<K, T> implements RequestStackController<K, T> {
     this._stacks = {};
   }
 }
-
-export const sigaaRequestStackSingleton = new SigaaRequestStack<
-  Request,
-  Page
->();

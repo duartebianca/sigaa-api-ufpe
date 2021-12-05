@@ -1,10 +1,7 @@
 import { URL } from 'url';
 
 import { isEqual } from 'lodash';
-import {
-  RequestStacks,
-  sigaaRequestStackSingleton
-} from '@helpers/sigaa-request-stack';
+import { RequestStacks, SigaaRequestStack } from '@helpers/sigaa-request-stack';
 import {
   HTTPRequestOptions,
   ProgressCallback,
@@ -136,7 +133,8 @@ export class SigaaHTTPSession implements HTTPSession {
   constructor(
     public url: string,
     private cookiesController: CookiesController,
-    private pageCache: PageCache
+    private pageCache: PageCache,
+    private sigaaRequestStack = new SigaaRequestStack<Request, Page>()
   ) {}
 
   /**
@@ -159,7 +157,7 @@ export class SigaaHTTPSession implements HTTPSession {
   }
 
   get requestStacks(): RequestStacks<Request, Page> {
-    return sigaaRequestStackSingleton.getStacksByDomain(this.url);
+    return this.sigaaRequestStack.getStacksByDomain(this.url);
   }
 
   private requestPromises: RequestPromiseTracker[] = [];
