@@ -88,6 +88,11 @@ export class SigaaAccountIFSC implements Account {
     ) {
       //If it is bond page.
       this.pagehomeParsePromise = this.parseBondPage(homepage);
+    } else if (
+      homepage.url.href.includes('/sigaa/telasPosSelecaoVinculos.jsf')
+    ) {
+      // refresh page to get the bonds, and then parse it.
+      this.http.followAllRedirect(homepage).then(this.parseBondPage);
     } else {
       throw new Error('SIGAA: Unknown homepage format.');
     }
