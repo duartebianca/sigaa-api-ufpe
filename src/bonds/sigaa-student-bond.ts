@@ -32,6 +32,8 @@ export interface StudentBond {
   getCourses(allPeriods?: boolean): Promise<CourseStudent[]>;
 
   getActivities(): Promise<Activity[]>;
+
+  getCurrentPeriod(): Promise<string>;
 }
 export interface ActivityTypeHomework {
   type: 'homework';
