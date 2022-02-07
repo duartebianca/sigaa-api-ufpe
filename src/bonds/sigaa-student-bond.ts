@@ -66,7 +66,7 @@ export class SigaaStudentBond implements StudentBond {
   ) {}
 
   readonly type = 'student';
-
+  private _currentPeriod?: string;
   /**
    * Get courses, in IFSC it is called "Turmas Virtuais".
    * @param allPeriods if true, all courses will be returned; otherwise, only latest courses.
@@ -296,5 +296,16 @@ export class SigaaStudentBond implements StudentBond {
       }
     }
     return listActivities;
+  }
+  async getCurrentPeriod(): Promise<string> {
+    if (this._currentPeriod) return this._currentPeriod;
+    const frontPage = await this.http.get(
+      '/sigaa/portais/discente/discente.jsf'
+    );
+    const period = frontPage
+      .$('#info-usuario > p.periodo-atual > strong')
+      .text();
+    this._currentPeriod = period;
+    return period;
   }
 }

@@ -1,4 +1,4 @@
-const { Sigaa } = require('sigaa-api');
+const { Sigaa } = require('../dist/sigaa-main');
 
 const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br'
@@ -16,14 +16,18 @@ const main = async () => {
    * @see https://github.com/GeovaneSchmitz/sigaa-api/issues/4
    **/
   const bonds = await account.getActiveBonds();
-
+  
   //Para cada vínculo
   for (const bond of bonds) {
     if (bond.type !== 'student') continue; // O tipo pode ser student ou teacher
 
+    
     //Se o tipo do vínculo for student, então tem matrícula e curso
     console.log('Matrícula do vínculo: ' + bond.registration);
     console.log('Curso do vínculo: ' + bond.program);
+
+    const period = await bond.getCurrentPeriod();
+    console.log('Período do vínculo: ' + period);
 
     // Se for usado bond.getCourses(true); todas as turmas são retornadas, incluindo turmas de outros semestres
     const courses = await bond.getCourses();
