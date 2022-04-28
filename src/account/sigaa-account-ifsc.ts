@@ -88,11 +88,6 @@ export class SigaaAccountIFSC implements Account {
     ) {
       //If it is bond page.
       this.pagehomeParsePromise = this.parseBondPage(homepage);
-    } else if (
-      homepage.url.href.includes('/sigaa/telasPosSelecaoVinculos.jsf')
-    ) {
-      // refresh page to get the bonds, and then parse it.
-      this.http.get(homepage.url.pathname).then(this.parseBondPage);
     } else {
       throw new Error('SIGAA: Unknown homepage format.');
     }
@@ -210,7 +205,7 @@ export class SigaaAccountIFSC implements Account {
     if (!program) throw new Error('SIGAA: Student bond program not found.');
 
     if (!status) throw new Error('SIGAA: Student bond status not found.');
-    if (status === 'CURSANDO')
+    if (status === 'CURSANDO' || status === 'CONCLUINTE')
       this.activeBonds.push(
         this.bondFactory.createStudentBond(registration, program, null)
       );
