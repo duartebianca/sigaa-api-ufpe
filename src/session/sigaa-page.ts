@@ -265,16 +265,16 @@ export class SigaaPage implements Page {
       }
     });
 
-    const postValuesString = `{${javaScriptCode
-      .replace(/if([\S\s]*?),{|},([\S\s]*?)false/gm, '')
-      .replace(/"/gm, '\\"')
-      .replace(/'/gm, '"')}}`;
-
+    const formPostValues = javaScriptCode.match(
+      /jsfcljs\s*\(\s*document\.getElementById\s*\(\s*'[^']+'\s*\)\s*,\s*({[^}]+})\s*,\s*''\s*\)/
+    );
+    if (!formPostValues) throw new Error('SIGAA: Form without post values.');
+    const formPostValuesString = formPostValues[1].replace(/'/gm, '"');
     return {
       action,
       postValues: {
         ...postValues,
-        ...JSON.parse(postValuesString)
+        ...JSON.parse(formPostValuesString)
       }
     };
   }
