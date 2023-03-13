@@ -95,6 +95,7 @@ export class SigaaAccountUNB implements Account {
         .get(homepage.url.href, { noCache: true })
         .then((page) => this.parseBondPage(page));
     } else {
+      console.debug(`DEBUG: parseHomepage path: ${homepage.url.href}`);
       throw new Error('SIGAA: Unknown homepage format.');
     }
   }
