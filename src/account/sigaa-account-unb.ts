@@ -93,8 +93,11 @@ export class SigaaAccountUNB implements Account {
       this.pagehomeParsePromise = this.http
         .get(homepage.url.href, { noCache: true })
         .then((page) => this.parseBondPage(page));
+    } else if (homepage.url.href.includes('/sigaa/telaAvisoLogon.jsf')) {
+      this.pagehomeParsePromise = this.http
+        .get('/sigaa/vinculos.jsf')
+        .then((page) => this.parseBondPage(page));
     } else {
-      console.debug(`DEBUG: parseHomepage path: ${homepage.url.href}`);
       throw new Error('SIGAA: Unknown homepage format.');
     }
   }
