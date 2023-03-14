@@ -1,4 +1,5 @@
 import { ProgressCallback } from '@session/sigaa-http';
+import { URL } from 'url';
 import { BondType } from '@bonds/sigaa-bond-factory';
 import { SigaaAccountIFSC } from './sigaa-account-ifsc';
 import { SigaaAccountUFPB } from './sigaa-account-ufpb';

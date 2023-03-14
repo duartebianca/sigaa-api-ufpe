@@ -3,6 +3,7 @@ import { BondController } from './sigaa-bond-controller';
 import { HTTP, SigaaHTTP } from './sigaa-http';
 import { SigaaHTTPWithBond } from './sigaa-http-with-bond';
 import { PageCacheWithBond } from './sigaa-page-cache-with-bond';
+import { URL } from 'url';
 
 /**
  * @category Internal

@@ -1,5 +1,6 @@
 import { isEqual } from 'lodash';
 import { RequestStacks } from '@helpers/sigaa-request-stack';
+import { URL } from 'url';
 import {
   HTTPRequestOptions,
   ProgressCallback,

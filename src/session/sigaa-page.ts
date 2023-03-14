@@ -1,4 +1,5 @@
 import { decode as htmlEntitiesDecode } from 'he';
+import { URL } from 'url';
 import * as http from 'http';
 import { load as $load } from 'cheerio';
 import { HTTPMethod } from 'src/sigaa-types';

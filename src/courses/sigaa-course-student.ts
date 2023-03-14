@@ -3,7 +3,7 @@ import { NewsData, News } from '@courseResources/sigaa-news-student';
 import { Parser } from '@helpers/sigaa-parser';
 import { File } from '@resources/sigaa-file';
 import { HTTP } from '@session/sigaa-http';
-
+import { URL } from 'url';
 import { SigaaForm, Page } from '@session/sigaa-page';
 import { QuizData, Quiz } from '@attachments/sigaa-quiz-student';
 import { HomeworkData, Homework } from '@attachments/sigaa-homework-student';

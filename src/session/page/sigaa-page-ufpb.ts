@@ -4,6 +4,7 @@ import {
   CommonSigaaPage,
   SigaaPageConstructor
 } from '@session/sigaa-page';
+import { URL } from 'url';
 
 /**
  * @category Internal

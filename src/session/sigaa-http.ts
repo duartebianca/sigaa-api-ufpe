@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as stream from 'stream';
 import iconv from 'iconv-lite';
 import { FormData } from 'formdata-node';
-
+import { URL } from 'url';
 import { request as HTTPRequest, RequestOptions } from 'https';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
 import { stringify } from 'querystring';

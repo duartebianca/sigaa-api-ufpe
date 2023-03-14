@@ -1,5 +1,5 @@
 import { LoginStatus } from '../../sigaa-types';
-
+import { URL } from 'url';
 import { HTTP } from '@session/sigaa-http';
 import { Session } from '@session/sigaa-session';
 import { Login } from './sigaa-login';

@@ -5,6 +5,7 @@ import { LoginStatus } from '../sigaa-types';
 import { BondFactory, BondType } from '@bonds/sigaa-bond-factory';
 import { Page } from '@session/sigaa-page';
 import { Account } from './sigaa-account';
+import { URL } from 'url';
 
 /**
  * Responsible for representing the user account.
