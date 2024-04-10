@@ -1,4 +1,11 @@
-## SIGAA-API
+# SIGAA-API
+
+## ARQUIVAMENTO
+
+A bastante tempo este projeto não sobre atualizações, e por isso, estou arquivando ele.
+Eu já terminei o meu curso no IFSC, além disso a minha vida profissional me tomou bastante tempo e sinto que já passou o momento deste projeto.
+
+Eu acho que este projeto compriu o seu objetivo, e eu fico feliz por ter ajudado algumas pessoas.
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/1ed3e89858204acdb2307febc87da74c)](https://www.codacy.com/gh/GeovaneSchmitz/sigaa-api/dashboard?utm_source=github.com&utm_medium=referral&utm_content=GeovaneSchmitz/sigaa-api&utm_campaign=Badge_Grade)
 
@@ -7,8 +14,6 @@ Uma biblioteca de Web Scraping, para acessar o SIGAA (Sistema Integrado de Gest�
 Atualmente, ela já foi testada no IFSC (Instituto Federal de Santa Catarina), IFFar (Instituto Federal Farroupilha) e na UFPB (Universidade Federal da Paraíba).
 
 Caso precise de suporte para alguma instituição ou algum recurso, não se acanhe, você será bem atendido. ;-)
-
-
 
 ### O que ela já faz
 
@@ -37,6 +42,5 @@ Ela é usada em um [bot](https://github.com/GeovaneSchmitz/SIGAA-telegram-integr
 - Executar o seu script com o nodejs.
 
 ![Exemplo 1 - Saída do Terminal](https://raw.githubusercontent.com/GeovaneSchmitz/sigaa-api/master/Exemplo1.webp 'Exemplo 1 - Saída do Terminal')
+
 #### Exemplo 1 - Saída do terminal do exemplo [search-teacher.js](https://github.com/GeovaneSchmitz/sigaa-api/blob/master/examples/search-teacher.js)
-
-
