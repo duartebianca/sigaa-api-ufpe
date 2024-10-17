@@ -9,11 +9,11 @@ import { HTTPFactory, SigaaHTTPFactory } from '@session/sigaa-http-factory';
 import { Login } from '@session/login/sigaa-login';
 import { SigaaLoginIFSC } from '@session/login/sigaa-login-ifsc';
 import { SigaaLoginUFPB } from '@session/login/sigaa-login-ufpb';
+import { SigaaLoginUFPE } from '@session/login/sigaa-login-ufpe';
 import { Session, SigaaSession } from '@session/sigaa-session';
 import { SigaaCookiesController } from '@session/sigaa-cookies-controller';
 import { SigaaPageCacheWithBond } from '@session/sigaa-page-cache-with-bond';
 import { SigaaPageCacheFactory } from '@session/sigaa-page-cache-factory';
-
 import {
   AccountFactory,
   SigaaAccountFactory
@@ -316,9 +316,10 @@ export class Sigaa {
     const SigaaLoginInstitution: SigaaLoginInstitutionMap = {
       IFSC: SigaaLoginIFSC,
       UFPB: SigaaLoginUFPB,
-      UNB: SigaaLoginUNB
+      UNB: SigaaLoginUNB,
+      UFPE: SigaaLoginUFPE
     };
-    const institution = options.institution ?? 'IFSC';
+    const institution = options.institution ?? 'UFPE';
     this.loginInstance = new SigaaLoginInstitution[institution](
       this.http,
       this.session
