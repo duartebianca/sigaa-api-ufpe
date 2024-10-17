@@ -1,13 +1,15 @@
+require('dotenv').config();
 const { Sigaa } = require('sigaa-api');
 
+
 const sigaa = new Sigaa({
-  url: 'https://sigaa.ifsc.edu.br',
-  institution: 'IFSC'
+  url: 'https://sigaa.ufpe.br',
+  institution: 'UFPE'
 });
 
 // coloque seu usuário
-const username = '';
-const password = '';
+const username = process.env.USERNAME;
+const password = process.env.PASSWORD;
 
 const main = async () => {
   const account = await sigaa.login(username, password); // login
